@@ -1,0 +1,88 @@
+{"maparray":{
+	
+	"version": 0.01,
+
+	"sharqi": {
+		"title": "Sharqi Assault",
+		"mode": "gpm_sa",
+		"desc": "Lorem"
+	},
+
+	"sharqi_rush": {
+		"title": "Sharqi Rush",
+		"mode": "gpm_rush",
+		"desc": "Lorem"
+	},
+
+	"karkand": {
+		"title": "Strike at Karkand",
+		"mode": "gpm_sa",
+		"desc": "Lorem"
+	},
+
+	"karkand_rush": {
+		"title": "Karkand Rush",
+		"mode": "gpm_rush",
+		"desc": "Lorem"
+	},
+
+	"dragon_valley": {
+		"title": "Dragon Valley",
+		"mode": "gpm_sa",
+		"desc": "Lorem"
+	},
+
+	"dragon_valley_rush": {
+		"title": "Dragon Valley Rush",
+		"mode": "gpm_rush",
+		"desc": "Lorem"
+	},
+
+	"oman": {
+		"title": "Oman Assault",
+		"mode": "gpm_sa",
+		"desc": "Lorem"
+	},
+
+	"oman_rush": {
+		"title": "Oman Rush",
+		"mode": "gpm_rush",
+		"desc": "Lorem"
+	},
+
+	"basra": {
+		"title": "Basra",
+		"mode": "gpm_sa",
+		"desc": "Lorem"
+	},
+
+	"basra_rush": {
+		"title": "Basra Rush",
+		"mode": "gpm_sa",
+		"desc": "Lorem"
+	},
+
+	"mynamar": {
+		"title": "Mynamar",
+		"mode": "gpm_sa",
+		"desc": "Lorem"
+	},
+
+	"dalian": {
+		"title": "Dalian",
+		"mode": "gpm_sa",
+		"desc": "Lorem"
+	},
+
+	"dalian_rush": {
+		"title": "Dalian Rush",
+		"mode": "gpm_rush",
+		"desc": "Lorem"
+	},
+
+	"mashtuur": {
+		"title": "Mashtuur",
+		"mode": "gpm_sa",
+		"desc": "Lorem"
+	}
+}}
