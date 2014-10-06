@@ -49,9 +49,9 @@ class Profiling:
         internalraw2 = json.loads(internalraw2)
         return [internalraw1, internalraw2]
 
-    """def supply(self, source):
+    def supply(self, source):
         for i in range(0, len(source)):
-            self.getcomplete(source[i].nucleus, source[i].profile, "[%22CoreStats%22, %%22, %22%22]")"""
+            self.getcomplete(source[i].nucleus, source[i].profile, "[%22CoreStats%22, %%22, %22%22]")
 
 
 #EXTREME BETA
@@ -64,8 +64,3 @@ class Limiter:
         for i in range(len(source)):
             return
         return
-
-profile = Profiling("en")
-profile.getprofinfo("2812236316", "817448226", "[%22CoreStats%22,%22BadPlayerStats%22]")
-jsonholder = profile.getcomplete("2812236316", "817448226", "[%22CoreStats%22,%22BadPlayerStats%22]")
-print(jsonholder[1]["data"]['equipment'][0])

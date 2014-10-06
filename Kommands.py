@@ -27,6 +27,15 @@ class PlayerStruc:
         self.cp_passengerassists, self.cp_targetassists, self.idle = None, None, None
         self.vehicle_name, self.vehicle_type = None, None
 
+class MapStruc:
+    __slots__ = ['mapindex', 'mapname', 'gamemode', 'numpl']
+
+    def __init__(self):
+        self.mapindex = -1
+        self.mapname = None
+        self.gamemode = None
+        self.numpl = 0
+
 
 class ServerCommando:
     def __init__(self, SOCKET):
@@ -339,20 +348,75 @@ class ServerCommando:
 
     ############################################################
 
-    def getplayerlist(self):
-        return self.server.send("")
-
     def runnextlevel(self, mapname):
         #admin.runnextlevel
-        return self.server.send("")
+        return self.server.send("exec admin.runnextlevel")
 
     def runrestartlevel(self, mapname):
         #admin.restartmap
-        return self.server.send("")
+        return self.server.send("exec admin.restartMap")
 
     def runkickpl(self, playername):
         #admin.kickplayer
         return self.server.send("exec admin.kickplayer {0}".format(playername))
+
+    def listplayers(self):
+        #admin.listPlayers
+        return self.server.send("exec admin.listPlayers")
+
+    #Maps
+    @property
+    def maplist(self):
+        _maplist = []
+        return _maplist
+
+    @maplist.getter
+    def maplist(self):
+        holder = self.server.send("exec mapList.list").replace(":", "")
+        holder = holder.split("\n")
+        holdee = []
+        _mapee = [MapStruc() for i in range(0, len(holder))]
+        for i in range(0, len(holder)):
+            holdee.append(holder[i].split(' '))
+            _mapee[i].mapindex = int(holdee[i][0])
+            _mapee[i].mapname = holdee[i][1]
+            _mapee[i].gamemode = holdee[i][2]
+            _mapee[i].numpl = int(holdee[i][3])
+        return _mapee
+
+    @property
+    def nextmap(self):
+        _next = None
+        return _next
+
+    @nextmap.getter
+    def nextmap(self):
+        return int(self.server.send("exec admin.nextLevel"))
+
+    def appendmap(self, mapname, gamemode, numpl):
+        return self.server.send("exec mapList.append {0} {1} {2}".format(mapname, gamemode, numpl))
+
+    def insertmap(self, index, mapname, gamemode, numpl):
+        return self.server.send("exec mapList.insert {0} {1} {2} {3}".format(index, mapname, gamemode, numpl))
+
+    def savemapcon(self):
+        return self.server.send("exec mapList.save")
+
+    def reloadmapcon(self):
+        return self.server.send("exec mapList.reload")
+
+    def clearmaplist(self):
+        return self.server.send("exec mapList.clear")
+
+    def removemaplist(self, index):
+        return self.server.send("exec mapList.remove {0}".format(index))
+
+    def currentmap(self):
+        return int(self.server.send("exec mapList.current"))
+
+    def mapcount(self):
+        return int(self.server.send("exec mapList.mapCount"))
+
 
     #RCON Methods
     def rconusers(self):
@@ -428,6 +492,15 @@ class BF2CC:
         self.internal = self.getbf2ccpl()
 
     @property
+    def numofplayers(self):
+        _players = 0
+        return _players
+
+    @numofplayers.getter
+    def numofplayers(self):
+        return int(self.bf2ccsiarray[3])
+
+    @property
     def ticketsT1(self):
         _ticket = 0
         return _ticket
@@ -437,6 +510,15 @@ class BF2CC:
         return int(self.bf2ccsiarray[11])
 
     @property
+    def ticketstartT1(self):
+        _tickerstart = 0
+        return _tickerstart
+
+    @ticketstartT1.getter
+    def ticketstartT1(self):
+        return int(self.bf2ccsiarray[10])
+
+    @property
     def ticketsT2(self):
         _ticket = 0
         return _ticket
@@ -444,6 +526,33 @@ class BF2CC:
     @ticketsT2.getter
     def ticketsT2(self):
         return int(self.bf2ccsiarray[16])
+
+    @property
+    def ticketstartT2(self):
+        _tickerstart = 0
+        return _tickerstart
+
+    @ticketstartT2.getter
+    def ticketstartT2(self):
+        return int(self.bf2ccsiarray[15])
+
+    @property
+    def gamestate(self):
+        _state = "N/A"
+        return _state
+
+    @gamestate.getter
+    def gamestate(self):
+        _holder = int(self.bf2ccsiarray[1])
+        if _holder is 1:
+            return "Playing"
+        elif _holder is 2:
+            return "End Game"
+        elif _holder is 0:
+            #not sure
+            return "Pre-game"
+        else:
+            return "Some other state I forgot about"
 
     @property
     def totalrounds(self):
@@ -470,8 +579,8 @@ class BF2CC:
 
     @walltime.getter
     def walltime(self):
-        _waller = int(self.bf2ccsiarray[28])
-        return datetime.datetime.fromtimestamp(_waller).strftime('%m-$d-$Y %H:%M:%S')
+        _waller = float(self.bf2ccsiarray[28])
+        return datetime.datetime.fromtimestamp(_waller).strftime('%m-%d-%Y %H:%M:%S')
 
     def getbf2ccsi(self):
         grabarray = self.server.send("bf2cc si")
@@ -539,7 +648,7 @@ class BF2CC:
         :return:
         """
         grab = self.server.send("bf2cc pl")
-        numberer = int(self.getnumpl())
+        numberer = self.numofplayers
         if numberer > 0:
             internal = grab.replace("\r\x04", "").split('\r')
         else:
@@ -554,13 +663,6 @@ class BF2CC:
         :return:
         """
         return self.bf2ccsiarray[7]
-
-    def getnumpl(self):
-        """
-        replaces the rcon command of
-        :return:
-        """
-        return self.bf2ccsiarray[3]
 
     def getplayerlist(self):
         """
