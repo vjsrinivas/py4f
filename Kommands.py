@@ -7,12 +7,17 @@ import datetime
 
 
 class PlayerStruc:
+    """
+    Class is used for reference when storing information given by the command bf2cc pl.
+    """
+
     __slots__ = ['index', 'playername', 'nucleus', 'profile', 'score', 'ping', 'kills', 'deaths', 'alive', 'game_class',
                  'rank', 'team', 'connected', 'suicides', 'cp_captures', 'cp_defends', 'cp_assists', 'cp_neutralizes',
                  'kit', 'position', 'vehicle_name', 'vehicle_type', 'isAI', 'cp_revives', 'cp_damageassists',
                  'cp_passengerassists', 'cp_targetassists', 'idle']
 
     def __init__(self):
+        self.index = 0
         self.playername = None
         self.nucleus = None
         self.profile = None
@@ -28,6 +33,9 @@ class PlayerStruc:
         self.vehicle_name, self.vehicle_type = None, None
 
 class MapStruc:
+    """
+    Small class structure helps split a maplist.list's return into usable parts
+    """
     __slots__ = ['mapindex', 'mapname', 'gamemode', 'numpl']
 
     def __init__(self):
@@ -483,8 +491,18 @@ class ServerCommando:
     def paramigaauth(self, value):
         return self.server.send("mm setParam mm_iga authLevel {0}".format(value))
 
+    ##Chat to
+    def sayall(self, msg):
+        return self.server.send("exec game.sayAll {0}".format(msg))
+
+    def sayprivate(self, index, msg):
+        return self.server.send("exec game.sayToPlayerWithId {0} {1}".format(index, msg))
 
 class BF2CC:
+    """
+    ALL information concerning the bf2cc module.
+    Class contains properties that can be get/set and functions that return an array or nothing for an action
+    """
     def __init__(self, SOCKET):
         self.socket = SOCKET
         self.server = TCPBARE(ClientFace.ip, ClientFace.port, ClientFace.buffer, ClientFace.password, self.socket)
@@ -583,6 +601,44 @@ class BF2CC:
         return datetime.datetime.fromtimestamp(_waller).strftime('%m-%d-%Y %H:%M:%S')
 
     def getbf2ccsi(self):
+        """
+        Gets the bf2cc si command from the bf2cc class. Response contains:
+        0	version
+        1	current game status
+        2	max players
+        3	players
+        4	joining
+        5	map name
+        6	next map name
+        7	server name
+        8	team 1 name
+        9	team 1 ticket state
+        10	team 1 start tickets
+        11 team 1 tickets
+        12	disabled (always 0)
+        13	team 2 name
+        14	team 2 ticket state
+        15	team 2 start tickets
+        16 team 2 tickets
+        17 disabled (always 0)
+        18	elapsed round time
+        19	remaining time
+        20	game mode
+        21	mod dir
+        22	world size
+        23	time limit
+        24	autobalance
+        25 ranked status
+        26 team 1 count
+        27 team 2 count
+        28 wall time
+        29 reserved slots
+        30 total rounds
+        31 current round
+
+        -Credit to: Vegabruda from the BFH forums: http://goo.gl/T8sA37
+        :return:
+        """
         grabarray = self.server.send("bf2cc si")
         grabarray = grabarray.replace("\n\x04", "").split("\t")
         return grabarray
@@ -693,6 +749,7 @@ class BF2CC:
         instance = []
         for i in range(0, len(internal)):
             instance.append(internal[i].split('\t'))
+            r[i].index = int(instance[i][0])
             r[i].playername = instance[i][1]
             r[i].alive = instance[i][8]
             r[i].connected = instance[i][4]
@@ -722,6 +779,12 @@ class BF2CC:
         return r
 
     def getchatresponse(self):
+        """
+        Retrieves bf2cc serverchatbuffer's repsonse and splits it into whole chunks (consisting of a whole chat instance)
+        Then, these chunks are split further into their respective fields. (Similar to getplayerlist()) and processed
+        through ChatStruc class for a return.
+        :return r as a ChatStruc list:
+        """
         gotcha = self.getbf2ccchat()
         r = [ChatStruct() for i in range(0, len(gotcha))]
         instance = []

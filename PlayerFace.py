@@ -49,18 +49,41 @@ class Profiling:
         internalraw2 = json.loads(internalraw2)
         return [internalraw1, internalraw2]
 
-    def supply(self, source):
-        for i in range(0, len(source)):
-            self.getcomplete(source[i].nucleus, source[i].profile, "[%22CoreStats%22, %%22, %22%22]")
-
 
 #EXTREME BETA
 class Limiter:
 
     def __init__(self):
+        self.profile = Profiling("en")
+        self.tempoffenders = []
+
+    def _detectiveLoadout(self, args, source, type, cmd):
+        internal = []
+        for i in range(0, len(source)):
+            internal.append(self.profile.getloadout(source[i].nucleus, source[i].profile))
+            barrer = len(internal[i]["data"]["equipment"])
+            keeper = 0
+            while keeper < barrer:
+                for e in range(len(args)):
+                    if internal[i]["data"]["equipment"][keeper][type] == args[e]:
+                        if keeper + 1 == barrer:
+                            self.evoker(source[i].playername)
+                        else:
+                            continue
+                    else:
+                        continue
+                keeper += 1
         return
 
-    def _detective(self, args, source):
-        for i in range(len(source)):
-            return
+    def evoker(self, inputer):
+        #Adding to repeat offenders list
+        self.tempoffenders.append(inputer)
+        #check if duplicate of same name (i.e. repeat offender)
+        hasseen = set()
+        for i in self.tempoffenders:
+            if i in hasseen:
+                print("Repeat Offender!")
+            else:
+                continue
+        #smthsmth action...
         return
