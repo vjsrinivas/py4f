@@ -19,16 +19,19 @@ class TCPBARE:
         self.s = SERVER
         #server-properties
 
-
     def connect(self):
         """
         Establishes connection to a certain RCON-enabled server.
         IP Address and Port Number are sensitive and should be typed with precision.
-        :return nothing:
+        :return bool of if the try went correctly:
         """
-        self.s.connect((self.IP, self.PORT))
-        print("Connecting...")
-        return
+        try:
+            self.s.connect((self.IP, self.PORT))
+            print("Connecting...")
+            return True
+        except Exception as e:
+            print(e)
+            return False
 
     def close(self):
         """

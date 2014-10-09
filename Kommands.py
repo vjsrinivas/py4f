@@ -21,16 +21,18 @@ class PlayerStruc:
         self.playername = None
         self.nucleus = None
         self.profile = None
-        self.score = None
-        self.ping = None
-        self.kills = None
-        self.deaths = None
-        self.alive = None
+        self.score = 0
+        self.ping = 0
+        self.kills = 0
+        self.deaths = 0
+        self.alive = False
         self.game_class = None
-        self.rank, self.team, self.connected, self.suicides, self.cp_captures, self.cp_defends = 0, 0, 0, 0, 0, 0
-        self.cp_assists, self.cp_neutralizes, self.kit, self.position, self.cp_revives, self.cp_damageassists = 0, 0, 0, 0, 0, 0
-        self.cp_passengerassists, self.cp_targetassists, self.idle = None, None, None
+        self.rank, self.team, self.connected, self.suicides, self.cp_captures, self.cp_defends = 0, None, False, 0, 0, 0
+        self.cp_assists, self.cp_neutralizes, self.kit, self.position, self.cp_revives, self.cp_damageassists = 0, 0, None, (), 0, 0
+        self.cp_passengerassists, self.cp_targetassists, self.idle = 0, 0, 0
         self.vehicle_name, self.vehicle_type = None, None
+        self.isAI = False
+
 
 class MapStruc:
     """
@@ -356,15 +358,18 @@ class ServerCommando:
 
     ############################################################
 
-    def runnextlevel(self, mapname):
+    def runnextlevel(self):
         #admin.runnextlevel
         return self.server.send("exec admin.runnextlevel")
 
-    def runrestartlevel(self, mapname):
+    def runrestartlevel(self):
         #admin.restartmap
         return self.server.send("exec admin.restartMap")
 
-    def runkickpl(self, playername):
+    def runkickpl(self, playerid, reason):
+        return self.server.send("kick '{0}' '{1}'".format(playerid, reason))
+
+    def runkickplalt(self, playername):
         #admin.kickplayer
         return self.server.send("exec admin.kickplayer {0}".format(playername))
 
@@ -401,6 +406,24 @@ class ServerCommando:
     def nextmap(self):
         return int(self.server.send("exec admin.nextLevel"))
 
+    @property
+    def currentmap(self):
+        _current = 0
+        return _current
+
+    @currentmap.getter
+    def currentmap(self):
+        return int(self.server.send("exec mapList.current"))
+
+    @property
+    def mapcount(self):
+        _count = 0
+        return _count
+
+    @mapcount.getter
+    def mapcount(self):
+        return int(self.server.send("exec mapList.mapCount"))
+
     def appendmap(self, mapname, gamemode, numpl):
         return self.server.send("exec mapList.append {0} {1} {2}".format(mapname, gamemode, numpl))
 
@@ -418,13 +441,6 @@ class ServerCommando:
 
     def removemaplist(self, index):
         return self.server.send("exec mapList.remove {0}".format(index))
-
-    def currentmap(self):
-        return int(self.server.send("exec mapList.current"))
-
-    def mapcount(self):
-        return int(self.server.send("exec mapList.mapCount"))
-
 
     #RCON Methods
     def rconusers(self):
@@ -747,36 +763,40 @@ class BF2CC:
         internal = self.getbf2ccpl()
         r = [PlayerStruc() for i in range(0, len(internal))]
         instance = []
-        for i in range(0, len(internal)):
-            instance.append(internal[i].split('\t'))
-            r[i].index = int(instance[i][0])
-            r[i].playername = instance[i][1]
-            r[i].alive = instance[i][8]
-            r[i].connected = instance[i][4]
-            r[i].cp_assists = instance[i][27]
-            r[i].cp_captures = instance[i][25]
-            r[i].cp_damageassists = instance[i][19]
-            r[i].cp_defends = instance[i][26]
-            r[i].cp_neutralizes = instance[i][28]
-            r[i].cp_passengerassists = instance[i][20]
-            r[i].cp_revives = instance[i][22]
-            r[i].cp_targetassists = instance[i][21]
-            r[i].deaths = instance[i][36]
-            #r[i].game_class = instance[i][] not implemented
-            r[i].idle = instance[i][41]
-            r[i].kills = instance[i][31]
-            r[i].kit = instance[i][34]
-            r[i].nucleus = instance[i][47]
-            r[i].ping = instance[i][3]
-            r[i].position = instance[i][40]
-            r[i].profile = instance[i][10]
-            r[i].rank = instance[i][39]
-            r[i].score = instance[i][37]
-            r[i].suicides = instance[i][12]
-            r[i].team = instance[i][2]
-            r[i].vehicle_name = instance[i][38]
-            r[i].vehicle_type = instance[i][33]
-        return r
+        if self.numofplayers > 0:
+            for i in range(0, len(internal)):
+                instance.append(internal[i].split('\t'))
+                r[i].index = int(instance[i][0])
+                r[i].playername = instance[i][1]
+                r[i].alive = bool(instance[i][8])
+                r[i].connected = bool(instance[i][4])
+                r[i].cp_assists = int(instance[i][27])
+                r[i].cp_captures = int(instance[i][25])
+                r[i].cp_damageassists = int(instance[i][19])
+                r[i].cp_defends = int(instance[i][26])
+                r[i].cp_neutralizes = int(instance[i][28])
+                r[i].cp_passengerassists = int(instance[i][20])
+                r[i].cp_revives = int(instance[i][22])
+                r[i].cp_targetassists = int(instance[i][21])
+                r[i].deaths = int(instance[i][36])
+                #r[i].game_class = instance[i][] not implemented
+                r[i].idle = int(instance[i][41])
+                r[i].kills = int(instance[i][31])
+                r[i].kit = instance[i][34]
+                r[i].nucleus = instance[i][47]
+                r[i].ping = int(instance[i][3])
+                for position in [instance[i][40].split(',')]:
+                    r[i].position = [float(position[0]), float(position[1]), float(position[2])]
+                r[i].profile = instance[i][10]
+                r[i].rank = int(instance[i][39])
+                r[i].score = int(instance[i][37])
+                r[i].suicides = int(instance[i][12])
+                r[i].team = int(instance[i][2])
+                r[i].vehicle_name = instance[i][38]
+                r[i].vehicle_type = instance[i][33]
+            return r
+        else:
+            return
 
     def getchatresponse(self):
         """

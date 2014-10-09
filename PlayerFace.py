@@ -1,7 +1,8 @@
 __author__ = 'Vijaysrinivas Rajagopal'
 
 from p4youtside import *
-
+from ClientFace import *
+from RCONBase import *
 
 #racial, religious, and more! Brought to you by the letter T, S, and A!
 class Profiling:
@@ -53,12 +54,15 @@ class Profiling:
 #EXTREME BETA
 class Limiter:
 
-    def __init__(self):
+    def __init__(self, SOCKET):
         self.profile = Profiling("en")
         self.tempoffenders = []
+        self.socket = SOCKET
+        self.server = TCPBARE(ClientFace.ip, ClientFace.port, ClientFace.buffer, ClientFace.password, self.socket)
 
-    def _detectiveLoadout(self, args, source, type, cmd):
+    def _detectiveLoadout(self, args, source, type):
         internal = []
+        keepo = 0
         for i in range(0, len(source)):
             internal.append(self.profile.getloadout(source[i].nucleus, source[i].profile))
             barrer = len(internal[i]["data"]["equipment"])
@@ -66,16 +70,13 @@ class Limiter:
             while keeper < barrer:
                 for e in range(len(args)):
                     if internal[i]["data"]["equipment"][keeper][type] == args[e]:
-                        if keeper + 1 == barrer:
-                            self.evoker(source[i].playername)
-                        else:
-                            continue
+                        self.evoker(source[i].playername, args[e])
                     else:
                         continue
                 keeper += 1
         return
 
-    def evoker(self, inputer):
+    def evoker(self, inputer, offense):
         #Adding to repeat offenders list
         self.tempoffenders.append(inputer)
         #check if duplicate of same name (i.e. repeat offender)
