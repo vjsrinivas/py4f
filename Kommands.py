@@ -449,21 +449,26 @@ class ServerCommando:
 
     #MM Commands
     ##Announcer
+    @property
     def listmsg(self):
-        internal = self.server.send("announcer list").split("\n")
-        return internal
+        _internal = []
+        return _internal
+
+    @listmsg.getter
+    def listmsg(self):
+        return self.server.send("announcer list").split("\n")
 
     def addjoinmsg(self, message):
-        return self.server.send("announcer addJoin '<{0}>'".format(message))
+        return self.server.send("announcer addJoin '{0}'".format(message))
 
     def addtimemsg(self, message, start, repeat):
-        return self.server.send("announcer addTimed  <{0}> <{1}> '<{2}>'".format(start, repeat, message))
+        return self.server.send("announcer addTimed  {0} {1} '{2}'".format(start, repeat, message))
 
     def removejoinmsg(self, joinid):
-        return self.server.send("announcer removeJoin <{0}>".format(joinid))
+        return self.server.send("announcer removeJoin {0}".format(joinid))
 
     def removetimedmsg(self, timedid):
-        return self.server.send("announcer removeTimed <{0}>".format(timedid))
+        return self.server.send("announcer removeTimed {0}".format(timedid))
 
     def removeall(self):
         return self.server.send("announcer .clearTimed"), self.server.send("announcer clearJoin")
