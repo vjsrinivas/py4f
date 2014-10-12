@@ -56,6 +56,35 @@ class ServerCommando:
 
     #properties
     @property
+    def modules(self):
+        _internal = []
+        return _internal
+
+    @modules.getter
+    def modules(self):
+        _internal = self.server.send("mm listModules").split("\n")
+        _external = {}
+        for i in range(len(_internal)):
+            stringer = _internal[i]
+            if _internal[i][-10:] == " running )":
+                _external[_internal[i][1:stringer.find(" v")]] = "running"
+            else:
+                _external[_internal[i][:10]] = "loaded"
+        return _external
+
+    def startmodule(self, modulename):
+        self.server.send("mm startModule {0}".format(modulename))
+
+    def stopmodule(self, modulename):
+        self.server.send("mm stopModule {0}".format(modulename))
+
+    def loadmodule(self, modulename):
+        self.server.send("mm loadModule {0}".format(modulename))
+
+    def reloadmodule(self, modulename):
+        self.server.send("mm reloadModule {0}".format(modulename))
+
+    @property
     def servername(self):
         _servername = None
         return _servername
@@ -138,7 +167,7 @@ class ServerCommando:
 
     @punkBuster.getter
     def punkBuster(self):
-        _bool =  int(self.server.send("exec sv.punkbuster"))
+        _bool = int(self.server.send("exec sv.punkbuster"))
         if _bool is 1:
             return True
         else:
@@ -373,11 +402,23 @@ class ServerCommando:
         #admin.kickplayer
         return self.server.send("exec admin.kickplayer {0}".format(playername))
 
+    def runbanpl(self, playerid, reason):
+        return self.server.send("ban {0} \"{1}\"".format(playerid, reason))
+
     def listplayers(self):
         #admin.listPlayers
         return self.server.send("exec admin.listPlayers")
 
     #Maps
+    @property
+    def maplistall(self):
+        _internal = []
+        return _internal
+
+    @maplistall.getter
+    def maplistall(self):
+        return self.server.send("exec maplist.listall").split('\n')
+
     @property
     def maplist(self):
         _maplist = []
@@ -458,6 +499,20 @@ class ServerCommando:
     def listmsg(self):
         return self.server.send("announcer list").split("\n")
 
+    @property
+    def listjoinmsg(self):
+        _internal = []
+        return _internal
+
+    @listjoinmsg.getter
+    def listjoinmsg(self):
+        _internal = self.server.send("announcer list").split("\n")
+        if _internal[0] == "No join messages":
+            return _internal[0]
+        else:
+            for i in range(len(_internal)):
+                return _internal[0:_internal[i].find(" ")-2]
+
     def addjoinmsg(self, message):
         return self.server.send("announcer addJoin '{0}'".format(message))
 
@@ -465,33 +520,49 @@ class ServerCommando:
         return self.server.send("announcer addTimed  {0} {1} '{2}'".format(start, repeat, message))
 
     def removejoinmsg(self, joinid):
-        return self.server.send("announcer removeJoin {0}".format(joinid))
+        for i in range(0, len(joinid)):
+            if i == 0:
+                self.server.send("announcer removeJoin {0}".format(joinid[i]))
+            else:
+                self.server.send("announcer removeJoin {0}".format(joinid[i]-1))
 
     def removetimedmsg(self, timedid):
         return self.server.send("announcer removeTimed {0}".format(timedid))
 
     def removeall(self):
-        return self.server.send("announcer .clearTimed"), self.server.send("announcer clearJoin")
+        return self.server.send("announcer clearTimed"), self.server.send("announcer clearJoin")
 
     def removealljoin(self):
         return self.server.send("announcer clearJoin")
 
     def removealltimed(self):
-        return self.server.send("announcer .clearTimed")
+        return self.server.send("announcer clearTimed")
+
+    def removealltimedalt(self):
+        return self.server.send("newrcon clearLogin")
+
 
     ##Auto-balance
+    @property
+    def paramroundswitch(self):
+        _output = None
+        return _output
+
+    @paramroundswitch.setter
     def paramroundswitch(self, intindex):
-        return self.server.send("mm setParam mm_autobalance roundSwitch {0}".format(intindex))
+        self.server.send("mm setParam mm_autobalance roundSwitch {0}".format(intindex))
+        self.server.send("mm saveConfig")
 
     #NOT RECOMMEDED FOR USE
+
     def paramallowcommander(self, blncom):
-        return self.server.send("mm setParam mm_autobalance allowCommander {0}".format(blncom))
+        return self.server.send("mm setParam mm_autobalance allowCommander {0}".format(blncom)), self.server.send("mm saveConfig")
 
     def paramallowsqleader(self, blncom):
-        return self.server.send("mm setParam mm_autobalance allowSquadLeader {0}".format(blncom))
+        return self.server.send("mm setParam mm_autobalance allowSquadLeader {0}".format(blncom)), self.server.send("mm saveConfig")
 
     def paramallowsqmember(self, blncom):
-        return self.server.send("mm setParam mm_autobalance allowSquadMember {0}".format(blncom))
+        return self.server.send("mm setParam mm_autobalance allowSquadMember {0}".format(blncom)), self.server.send("mm saveConfigc")
 
     ##Ingame Commands
     def listiga(self):
@@ -501,7 +572,7 @@ class ServerCommando:
         return self.server.send("iga listAdmins")
 
     def deligacmd(self, cmd):
-        return self.server.send("iga delCmd <{0}>".format(cmd))
+        return self.server.send("iga delCmd {0}".format(cmd))
 
     def addigacmd(self, cmd, attri):
         return self.server.send("iga addCmd {0} {1}".format(cmd, attri))
@@ -514,10 +585,63 @@ class ServerCommando:
 
     ##Chat to
     def sayall(self, msg):
-        return self.server.send("exec game.sayAll {0}".format(msg))
+        return self.server.send("exec game.sayAll \"{0}\"".format(msg))
 
     def sayprivate(self, index, msg):
-        return self.server.send("exec game.sayToPlayerWithId {0} {1}".format(index, msg))
+        return self.server.send("exec game.sayToPlayerWithId {0} \"{1}\"".format(index, msg))
+
+    ##mm_kicker
+
+    @property
+    def listwords(self):
+        return []
+
+    @listwords.getter
+    def listwords(self):
+        return self.server.send("kicker listWord").split("\n")
+
+    def addbanpattern(self, word):
+        return self.server.send("addBanPattern {0}".format(word))
+
+    def addbanword(self, word):
+        return self.server.send("addBanWord {0}".format(word))
+
+    def addkickpattern(self, word):
+        return self.server.send("addKickPattern {0}".format(word))
+
+    def addkickword(self, word):
+        return self.server.send("addKickWord {0}".format(word))
+
+    def clearbanpattern(self):
+        return self.server.send("clearBanPatterns")
+
+    def clearbanwords(self):
+        return self.server.send("clearBanWords")
+
+    def clearkickpattern(self):
+        return self.server.send("clearKickPatterns")
+
+    def clearkickwords(self):
+        return self.server.send("clearKickWords")
+
+    def removebanpattern(self, word):
+        return self.server.send("removeBanPattern {0}".format(word))
+
+    def removebanword(self, word):
+        return self.server.send("removeBanWord {0}".format(word))
+
+    def removekickpattern(self, word):
+        return self.server.send("removeKickPattern {0}".format(word))
+
+    def removekickword(self, word):
+        return self.server.send("removeKickWord {0}".format(word))
+
+    def setmaxping(self, value):
+        return self.server.send("mm mm_kicker maxPing {0}".format(value))
+
+    def setminping(self, vaulue):
+        return self.server.send("mm mm_kicker minPing {0}".format(vaulue))
+
 
 class BF2CC:
     """
@@ -546,7 +670,7 @@ class BF2CC:
 
     @ticketsT1.getter
     def ticketsT1(self):
-        return int(self.bf2ccsiarray[11])
+        return self.ticketstartT1 - int(self.bf2ccsiarray[11])
 
     @property
     def ticketstartT1(self):
@@ -564,7 +688,7 @@ class BF2CC:
 
     @ticketsT2.getter
     def ticketsT2(self):
-        return int(self.bf2ccsiarray[16])
+        return self.ticketstartT2 - int(self.bf2ccsiarray[16])
 
     @property
     def ticketstartT2(self):
@@ -669,6 +793,13 @@ class BF2CC:
         grab = grab.replace("\n\x04", "").split("\r\r")
         return grab
 
+    #Recommended not to change
+    def chatbuffer(self, value):
+        return self.server.send("mm setParam mm_bf2cc chatBufferSize {0}".format(value)), self.server.send("mm saveConfig")
+
+    def chatformat(self, chatformat):
+        return self.server.send("mm setParam mm_bf2cc serverchatFormat \"{0}\"".format(chatformat)), self.server.send("mm saveConfig")
+
     def getbf2ccpl(self):
         """
         Gets the bf2cc pl command from the bf2cc class. Response contains:
@@ -734,12 +865,22 @@ class BF2CC:
 
     #get info from BF2CC - some alts to PureCommands
 
-    def getservername(self):
+    @property
+    def servername(self):
         """
         replaces the need to call server property, sv.servername
         :return:
         """
+        _part = ""
+        return _part
+
+    @servername.getter
+    def servername(self):
         return self.bf2ccsiarray[7]
+
+    @servername.setter
+    def servername(self, value):
+        self.server.send("exec sv.servername {0}".format(value))
 
     def getplayerlist(self):
         """
