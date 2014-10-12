@@ -562,7 +562,7 @@ class ServerCommando:
         return self.server.send("mm setParam mm_autobalance allowSquadLeader {0}".format(blncom)), self.server.send("mm saveConfig")
 
     def paramallowsqmember(self, blncom):
-        return self.server.send("mm setParam mm_autobalance allowSquadMember {0}".format(blncom)), self.server.send("mm saveConfigc")
+        return self.server.send("mm setParam mm_autobalance allowSquadMember {0}".format(blncom)), self.server.send("mm saveConfig")
 
     ##Ingame Commands
     def listiga(self):
@@ -598,7 +598,7 @@ class ServerCommando:
 
     @listwords.getter
     def listwords(self):
-        return self.server.send("kicker listWord").split("\n")
+        return self.server.send("kicker listWords").split("\n")
 
     def addbanpattern(self, word):
         return self.server.send("addBanPattern {0}".format(word))
