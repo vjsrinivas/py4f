@@ -1,9 +1,10 @@
 __author__ = 'Vijaysrinivas Rajagopal'
 
 from RCONBase import TCPBARE
-import ClientFace, time, datetime
 from Chatter import*
+import ClientFace
 import datetime
+import threading, time
 
 
 class PlayerStruc:
@@ -140,7 +141,7 @@ class ServerCommando:
 
     @roundsPerMap.getter
     def roundsPerMap(self):
-        return self.server.send("exec sv.roundsPerMap")
+        return int(self.server.send("exec sv.roundsPerMap"))
 
     @roundsPerMap.setter
     def roundsPerMap(self, _amount):
@@ -501,8 +502,7 @@ class ServerCommando:
 
     @property
     def listjoinmsg(self):
-        _internal = []
-        return _internal
+        return []
 
     @listjoinmsg.getter
     def listjoinmsg(self):
@@ -510,8 +510,16 @@ class ServerCommando:
         if _internal[0] == "No join messages":
             return _internal[0]
         else:
-            for i in range(len(_internal)):
-                return _internal[0:_internal[i].find(" ")-2]
+            return _internal[0:(_internal.index("Timed messages:")-1)]
+
+    @property
+    def listtimemsg(self):
+        _internal = self.server.send("announcer list").split("\n")
+        _timed = _internal.index("Timed messages:")
+        if _internal[_timed] == "No timed messages":
+            return _internal[_timed]
+        else:
+            return _internal[_timed:]
 
     def addjoinmsg(self, message):
         return self.server.send("announcer addJoin '{0}'".format(message))
@@ -653,6 +661,13 @@ class BF2CC:
         self.server = TCPBARE(ClientFace.ip, ClientFace.port, ClientFace.buffer, ClientFace.password, self.socket)
         self.bf2ccsiarray = self.getbf2ccsi()
         self.internal = self.getbf2ccpl()
+        self.update = True
+
+        ### NOT FULLY TESTED
+        """bkthread = threading.Thread(name='threader', target=self.__recall, args=())
+        bkthread.daemon = True
+        bkthread.start()"""
+        ### INTENDED FOR CLIENT-SIDE USE. USING ON ANYTHING ELSE MIGHT RESULT IN UNEXPECTED CONSEQUENCES
 
     @property
     def numofplayers(self):
@@ -967,3 +982,10 @@ class BF2CC:
             r[i].time = instance[i][4]
             r[i].message = instance[i][5]
         return r
+
+    def __recall(self):
+        while self.update is True:
+            self.bf2ccsiarray = self.getbf2ccsi()
+            self.internal = self.getplayerlist()
+            time.sleep(3) #seconds
+            #print("Executed")
