@@ -4,7 +4,7 @@ from RCONBase import TCPBARE
 from Chatter import*
 import ClientFace
 import datetime
-import threading, time
+import threading, time, difflib
 
 
 class PlayerStruc:
@@ -562,7 +562,6 @@ class ServerCommando:
         self.server.send("mm saveConfig")
 
     #NOT RECOMMEDED FOR USE
-
     def paramallowcommander(self, blncom):
         return self.server.send("mm setParam mm_autobalance allowCommander {0}".format(blncom)), self.server.send("mm saveConfig")
 
@@ -656,17 +655,25 @@ class BF2CC:
     ALL information concerning the bf2cc module.
     Class contains properties that can be get/set and functions that return an array or nothing for an action
     """
+
     def __init__(self, SOCKET):
         self.socket = SOCKET
         self.server = TCPBARE(ClientFace.ip, ClientFace.port, ClientFace.buffer, ClientFace.password, self.socket)
         self.bf2ccsiarray = self.getbf2ccsi()
         self.internal = self.getbf2ccpl()
-        self.update = True
+        self.update = False
+        self.counter = 0
+        self.reminder = []
+        self.gotcha = []
+        self.surrender = []
 
         ### NOT FULLY TESTED
-        """bkthread = threading.Thread(name='threader', target=self.__recall, args=())
-        bkthread.daemon = True
-        bkthread.start()"""
+        bkthread = threading.Thread(name='threader', target=self.__recall, args=())
+        if self.update is True:
+            bkthread.daemon = True
+            bkthread.start()
+        else:
+            return
         ### INTENDED FOR CLIENT-SIDE USE. USING ON ANYTHING ELSE MIGHT RESULT IN UNEXPECTED CONSEQUENCES
 
     @property
@@ -806,6 +813,7 @@ class BF2CC:
     def getbf2ccchat(self):
         grab = self.server.send("bf2cc serverchatbuffer")
         grab = grab.replace("\n\x04", "").split("\r\r")
+        del grab[-1]
         return grab
 
     #Recommended not to change
@@ -814,6 +822,10 @@ class BF2CC:
 
     def chatformat(self, chatformat):
         return self.server.send("mm setParam mm_bf2cc serverchatFormat \"{0}\"".format(chatformat)), self.server.send("mm saveConfig")
+
+    def printRunningConfig(self):
+        return self.server.send("mm printRunningConfig")
+    ###
 
     def getbf2ccpl(self):
         """
@@ -959,19 +971,21 @@ class BF2CC:
         else:
             return
 
-    def getchatresponse(self):
+    def getchatresponse(self, chatsource):
         """
         Retrieves bf2cc serverchatbuffer's repsonse and splits it into whole chunks (consisting of a whole chat instance)
         Then, these chunks are split further into their respective fields. (Similar to getplayerlist()) and processed
         through ChatStruc class for a return.
         :return r as a ChatStruc list:
         """
-        gotcha = self.getbf2ccchat()
-        r = [ChatStruct() for i in range(0, len(gotcha))]
+        getcha = chatsource
+        if getcha is None:
+            return None
+        else:
+            r = [ChatStruct() for i in range(0, len(getcha))]
         instance = []
-        for i in range(0, len(gotcha)):
-            instance.append(gotcha[i].split('\t'))
-        del instance[-1]
+        for i in range(0, len(getcha)):
+            instance.append(getcha[i].split('\t'))
         #timer = " {0} {1} {2}".format(datetime.now().year, datetime.now().month, datetime.now().day)
         for i in range(0, len(instance)):
             r[i].index = instance[i][0]
@@ -983,9 +997,37 @@ class BF2CC:
             r[i].message = instance[i][5]
         return r
 
+    def getchatraw(self):
+        self.surrender = []
+        if self.counter == 0:
+            self.reminder = self.getbf2ccchat()
+            self.surrender = self.reminder
+        self.counter += 1
+        print("{} >>>>>>>>".format(self.counter))
+        self.gotcha = self.getbf2ccchat()
+        if self.counter % 8 == 0:
+            self.reminder = self.getbf2ccchat()
+        else:
+            for i,s in enumerate(difflib.ndiff(self.gotcha, self.reminder)):
+                if s[0] == ' ':
+                    if not self.surrender:
+                        self.surrender = []
+                    else: continue
+                elif s[0] == '-' or s[0] == '+':
+                    print("Difference detected")
+                    suerma = self.gotcha.index(self.reminder[-1])
+                    self.surrender = self.gotcha[suerma+1:]
+                    self.reminder = self.gotcha
+                    return self.surrender
+                elif s[0] == "?":
+                    print("unknown")
+                else:
+                    continue
+        return self.surrender
+
     def __recall(self):
         while self.update is True:
             self.bf2ccsiarray = self.getbf2ccsi()
             self.internal = self.getplayerlist()
             time.sleep(3) #seconds
-            #print("Executed")
+            print("Executed")

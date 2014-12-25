@@ -1,15 +1,15 @@
 __author__ = 'Vijaysrinivas Rajagopal'
 
-from RCONBase import TCPBARE
-from Kommands import *
 import socket
+from Kommands import *
 from Chatter import *
 from PlayerFace import *
+import threading
+import time
+
 
 #Dependencies
 ip = "00.000.000.000"
-port = 0000
-buffer = 9999
+port = 0
+buffer = 10000
 password = ""
-
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

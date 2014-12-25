@@ -37,7 +37,7 @@ class GrabSource:
         except(TypeError, KeyError, ValueError, Exception) as e:
             print(e)
 
-    def sourceoffline(self, filename, moder = "r"):
+    def sourceoffline(self, filename, moder="r"):
         """
         NOT RECOMMENDED FOR USE.
         In case the URL of the source file does not work, this is a fallback [JSON created 9/25/14]
