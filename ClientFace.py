@@ -9,7 +9,23 @@ import time
 
 
 #Dependencies
-ip = "00.000.000.000"
-port = 0
-buffer = 10000
+ip = ""
+port = 0000
+buffer = 100000
 password = ""
+
+# Create main socket
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# Create a variable to handle the connection mumbo gumbo
+handler = TCPBARE(ip, port, buffer, password, s)
+#Actually connect and auth
+handler.connect()
+handler.auth()
+kommander = BF2CC(s)
+chatterina = ChatLog()
+
+#while True:
+    #chatterina.writelog(kommander.getchatresponse("Admin"))
+    #time.sleep(1)
+
+handler.close()

@@ -971,14 +971,14 @@ class BF2CC:
         else:
             return
 
-    def getchatresponse(self, chatsource):
+    def getchatresponse(self, filterout = None):
         """
         Retrieves bf2cc serverchatbuffer's repsonse and splits it into whole chunks (consisting of a whole chat instance)
         Then, these chunks are split further into their respective fields. (Similar to getplayerlist()) and processed
         through ChatStruc class for a return.
         :return r as a ChatStruc list:
         """
-        getcha = chatsource
+        getcha = self.getchatraw()
         if getcha is None:
             return None
         else:
@@ -995,7 +995,16 @@ class BF2CC:
             #r[i].time = time.strptime(instance[i][4] + timer, "[%H:%M:%S] %Y %m %d")
             r[i].time = instance[i][4]
             r[i].message = instance[i][5]
-        return r
+        if filterout is None:
+            return r
+        else:
+            superlative = []
+            for e in range(0, len(r)):
+                if r[e].message.find("|ccc|") == -1:
+                    superlative.append(r[e])
+                else:
+                    continue
+            return superlative
 
     def getchatraw(self):
         self.surrender = []
@@ -1015,7 +1024,11 @@ class BF2CC:
                     else: continue
                 elif s[0] == '-' or s[0] == '+':
                     print("Difference detected")
-                    suerma = self.gotcha.index(self.reminder[-1])
+                    try:
+                        suerma = self.gotcha.index(self.reminder[-1])
+                    except TypeError:
+                        self.gotcha = []
+                        return self.surrender
                     self.surrender = self.gotcha[suerma+1:]
                     self.reminder = self.gotcha
                     return self.surrender
